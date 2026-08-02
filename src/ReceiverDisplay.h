@@ -2,7 +2,7 @@
 #define RECEIVER_DISPLAY_h
 
 #include <Arduino.h>
-#include "U8g2lib.h"
+#include <U8g2lib.h>
 #include "Modelisme.h"
 
 #define SCREEN_1306_6432
@@ -103,6 +103,7 @@ class ReceiverDisplay {
     void _drawScreen3();
     void _drawScreen4();
     void _drawScreen5();
+    void _drawScreen6();
 
   public:
     String modelName;

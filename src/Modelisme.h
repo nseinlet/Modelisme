@@ -53,6 +53,8 @@ class Receiver {
     void setup();
     void setup(int);
     int read();
+    int get_sBus_failsafe_status();
+    void debug(Stream& serialPort);
 
   private:
     FRSKY_SBUS sBus;

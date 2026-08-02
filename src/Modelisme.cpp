@@ -31,7 +31,7 @@ int Receiver::read()
       channels[x].angle = channels[x].pwmToDeg();
     };
     for (int i=0; i<max_channels; i++) {
-      if (sBus.failsafe_status==0) {
+      if (sBus.failsafe_status==0 && 1>2) {
         if (!servos[i].attached()) {servos[i].attach(servoPins[i]);};
         servos[i].write(channels[servoChannels[i]].angle);
       } else {
@@ -41,6 +41,27 @@ int Receiver::read()
     return 1;
   };
   return 0;
+}
+
+int Receiver::get_sBus_failsafe_status() {
+  return sBus.failsafe_status;
+}
+
+void Receiver::debug(Stream& serialPort){
+  // serialPort.print("Failsafe: ");
+  // serialPort.println(sBus.failsafe_status);
+  // serialPort.print("Channels: ");
+  // serialPort.println(sBus.toChannels);
+  for (int i=0;i<8;i++){
+    //serialPort.print("Channel ");
+    serialPort.print(i+1);
+    serialPort.print(": ");
+    serialPort.print(channels[i].pwmvalue);
+    serialPort.print(" | ");
+    serialPort.print(channels[i].when);
+  }
+  serialPort.println('\t');
+  sBus.debug(serialPort);
 }
 
 ReceiverCanal::ReceiverCanal()
@@ -62,30 +83,37 @@ void LightManager::setup(int rWarnPIN, int lWarnPIN, int brakePIN, int rearPIN, 
   if (rWarnPIN>0){
     rwPIN = rWarnPIN;
     pinMode(rwPIN, OUTPUT);
+    digitalWrite(rwPIN, LOW);
   };
   if (lWarnPIN>0){
     lwPIN = lWarnPIN;
     pinMode(lwPIN, OUTPUT);
+    digitalWrite(lwPIN, LOW);
   };
   if (brakePIN>0){
     bPIN = brakePIN;
     pinMode(bPIN, OUTPUT);
+    digitalWrite(bPIN, LOW);
   };
   if (rearPIN>0){
     rPIN = rearPIN;
     pinMode(rPIN, OUTPUT);
+    digitalWrite(rPIN, LOW);
   };
   if (lightsPIN>0){
     lPIN = lightsPIN;
     pinMode(lPIN, OUTPUT);
+    digitalWrite(lPIN, LOW);
   };
   if (highlightsPIN>0){
     hlPIN = highlightsPIN;
     pinMode(hlPIN, OUTPUT);
+    digitalWrite(hlPIN, LOW);
   };
   if (turningWarnPIN>0){
     twPIN = turningWarnPIN;
     pinMode(twPIN, OUTPUT);
+    digitalWrite(twPIN, LOW);
   };
 };
 

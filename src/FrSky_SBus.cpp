@@ -1,10 +1,24 @@
 #include "FrSky_SBus.h"
+#if defined(ARDUINO_AVR_NANO_EVERY)
+#include "NanoEverySerial.h"
+#endif
 
 void FRSKY_SBUS::begin(){
 	uint8_t loc_sbusData[SBUS_DATA_SIZE+1] = {
-	  0x0f,0x01,0x04,0x20,0x00,0xff,0x07,0x40,0x00,0x02,0x10,0x80,0x2c,0x64,0x21,0x0b,0x59,0x08,0x40,0x00,0x02,0x10,0x80,0x2c,0x64,0x21,0x0b,0x59,0x08,0x40,0x00,0x02,0x10,0x80,0x00,0x00};
+    #if defined(ACCESS_24)
+      0x0f,0x01,0x04,0x20,0x00,0xff,0x07,0x40,0x00,0x02,0x10,0x80,0x2c,0x64,0x21,0x0b,0x59,0x08,0x40,0x00,0x02,0x10,0x80,0x2c,0x64,0x21,0x0b,0x59,0x08,0x40,0x00,0x02,0x10,0x80,0x00,0x00};
+    #else
+      0x0f,0x01,0x04,0x20,0x00,0xff,0x07,0x40,0x00,0x02,0x10,0x80,0x2c,0x64,0x21,0x0b,0x59,0x08,0x40,0x00,0x02,0x10,0x80,0x00,0x00};
+    #endif
+    #if defined(ARDUINO_AVR_NANO_EVERY)
+     NanoEverySerial1.begin();
+    #else
+  	  port.begin(BAUDRATE, SERIAL_8E2);
+    #endif
 
-  	port.begin(BAUDRATE);
+    #if defined(SBUS_DEBUG)
+      readErrors = 0;
+    #endif
 
 	//memcpy(sbusData,loc_sbusData,SBUS_DATA_SIZE+1);
   for (int i=0;i<CHANNEL_SIZE;i++){
@@ -16,7 +30,6 @@ void FRSKY_SBUS::begin(){
     };
   }
 	failsafe_status = SBUS_NO_SIGNAL;
-	sbus_passthrough = 1;
 	toChannels = 0;
 	bufferIndex=0;
 	feedState = 0;
@@ -31,33 +44,7 @@ int16_t FRSKY_SBUS::Channel(uint8_t ch) {
     return 1023;
   }
 }
-uint8_t FRSKY_SBUS::DigiChannel(uint8_t ch) {
-  // Read digital channel data
-  if ((ch>0) && (ch<=2)) {
-    return channels[15+ch];
-  }
-  else{
-    return 0;
-  }
-}
-void FRSKY_SBUS::Servo(uint8_t ch, int16_t position) {
-  // Set servo position
-  if ((ch>0)&&(ch<=CHANNEL_SIZE-2)) {
-    if (position>2048) {
-      position=2048;
-    }
-    servos[ch-1] = position;
-  }
-}
-void FRSKY_SBUS::DigiServo(uint8_t ch, uint8_t position) {
-  // Set digital servo position
-  if ((ch>0) && (ch<=2)) {
-    if (position>1) {
-      position=1;
-    }
-    servos[15+ch] = position;
-  }
-}
+
 uint8_t FRSKY_SBUS::Failsafe(void) {
   return failsafe_status;
 }
@@ -103,20 +90,56 @@ void FRSKY_SBUS::UpdateChannels(void) {
   }
 
 }
+
+#if defined(ARDUINO_AVR_NANO_EVERY)
+
+void FRSKY_SBUS::readSerial(void){
+}
+
+void FRSKY_SBUS::FeedLine(void){
+  if (NanoEverySerial1.read()){
+    bufferIndex = HARDWARE_SERIAL_READ_SIZE;
+
+    #if defined SBUS_DEBUG
+      //memcpy(dbg1, NanoEverySerial1.buffer, bufferIndex);
+    #endif
+
+    while(bufferIndex>SBUS_DATA_SIZE){
+      if (NanoEverySerial1.buffer[bufferIndex-SBUS_DATA_SIZE] == SBUS_FRAME_BEGIN && NanoEverySerial1.buffer[bufferIndex] == SBUS_FRAME_END){
+        memcpy(sbusData, NanoEverySerial1.buffer+bufferIndex-SBUS_DATA_SIZE, SBUS_DATA_SIZE+1);
+
+        #if defined SBUS_DEBUG
+          lastread = millis();
+        #endif
+        toChannels = 1;
+        return;
+      }
+      bufferIndex--;
+    }
+  #if defined SBUS_DEBUG
+  } else {
+      readErrors++;
+  #endif
+  };
+}
+#else
+void FRSKY_SBUS::readSerial(void){
+  prevData = inData;
+  inData = port.read();
+}
+
 void FRSKY_SBUS::FeedLine(void){
   if (port.available() > SBUS_DATA_SIZE){
     while(port.available() > 0){
-      inData = port.read();
+      readSerial();
       switch (feedState){
       case 0:
-        if (inData != 0x0f){
-          while(port.available() > 0){//read the contents of in buffer this should resync the transmission
-            inData = port.read();
-          }
-          return;
+        bufferIndex = 0;
+        while(port.available() > 0 && inData != SBUS_FRAME_BEGIN && prevData != SBUS_FRAME_END){
+          //read the contents of in buffer this should resync the transmission
+          readSerial();
         }
-        else{
-          bufferIndex = 0;
+        if (inData == SBUS_FRAME_BEGIN){
           inBuffer[bufferIndex] = inData;
           inBuffer[SBUS_DATA_SIZE] = 0xff;
           feedState = 1;
@@ -130,13 +153,68 @@ void FRSKY_SBUS::FeedLine(void){
         }
         if (bufferIndex == SBUS_DATA_SIZE){
           feedState = 0;
-          if (inBuffer[0]==0x0f && inBuffer[SBUS_DATA_SIZE] == 0x00){
+          // if (inBuffer[0]==SBUS_FRAME_BEGIN && inBuffer[SBUS_DATA_SIZE] == SBUS_FRAME_END){
+          if (inBuffer[SBUS_DATA_SIZE] == SBUS_FRAME_END){
             memcpy(sbusData,inBuffer,SBUS_DATA_SIZE+1);
+            #if defined SBUS_DEBUG
+            lastread = millis();
+            #endif
             toChannels = 1;
-          }
+            return;
+          #if defined SBUS_DEBUG
+          } else {
+              readErrors++;
+          #endif
+          };
         }
         break;
       }
     }
   }
 }
+#endif
+
+#if defined SBUS_DEBUG
+void FRSKY_SBUS::debug(Stream& serialPort){
+  // serialPort.print("Failsafe: ");
+  // serialPort.println(failsafe_status);
+  // for (int i=0;i<CHANNEL_SIZE;i++){
+  //   serialPort.print("\t");
+  //   serialPort.print(channels[i]);
+  // }
+  // serialPort.println();
+
+  //serialPort.print(port.available());
+  //serialPort.print('\t');
+  //serialPort.print(SBUS_DATA_SIZE);
+  //serialPort.print('\t');
+  serialPort.print(lastread);
+  serialPort.print('\t');
+  serialPort.print(readErrors);
+  serialPort.print('\t');
+  serialPort.print(bufferIndex);
+  serialPort.println('\t');
+  // serialPort.print("SerialBuffer: ");
+  // for (int i=0;i<MAX_DATA_SIZE;i++){
+  //   serialPort.print(i);
+  //   serialPort.print(':');
+  //   serialPort.print(dbg1[i],HEX);
+  //   serialPort.print('\t');
+  // };
+  // serialPort.println('\t');
+  serialPort.print("SBUSData: ");
+  for (int i=0;i<SBUS_DATA_SIZE+1;i++){
+    serialPort.print(i);
+    serialPort.print(':');
+    serialPort.print(sbusData[i],HEX);
+    serialPort.print('\t');
+  };
+  serialPort.println('\t');
+  // serialPort.print(USART1.STATUS & USART_RXCIF_bm);
+  // serialPort.print('\t');
+  // serialPort.print(USART1.STATUS);
+  // serialPort.print('\t');
+  // serialPort.print(USART_RXCIF_bm);
+  // serialPort.println('\t');
+}
+#endif

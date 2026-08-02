@@ -53,19 +53,21 @@ void ReceiverDisplay::loop(){
     {
         refreshTime = currentTime + 1000;
         u8g2->clearBuffer();
-        //if (nbrdisp==0) {
+        if (nbrdisp==0) {
           _drawScreen0();
-        // } else if (nbrdisp==1){
-        //   _drawScreen1();
-        // } else if (nbrdisp==2){
-        //   _drawScreen2();
-        // } else if (nbrdisp==3){
-        //   _drawScreen3();
-        // } else if (nbrdisp==4){
-        //   _drawScreen4();
-        // } else {
-        //   _drawScreen5();
-        // };
+        } else if (nbrdisp==1){
+          _drawScreen1();
+        } else if (nbrdisp==2){
+          _drawScreen2();
+        } else if (nbrdisp==3){
+          _drawScreen3();
+        } else if (nbrdisp==4){
+          _drawScreen4();
+        } else if (nbrdisp==5){
+          _drawScreen5();
+        } else {
+          _drawScreen6();
+        };
         u8g2->sendBuffer();
     };
 }
@@ -178,3 +180,11 @@ void ReceiverDisplay::_drawScreen5() {
     };
 };
 
+void ReceiverDisplay::_drawScreen6() {
+    u8g2->setFont(u8g2_font_5x7_tf);
+    u8g2->drawStr( 1, 6, "SBus status:");
+    u8g2->drawStr( 1, 13, String(rec->get_sBus_failsafe_status()).c_str());
+    u8g2->drawStr( 1, 20, "Last change");
+    
+
+}

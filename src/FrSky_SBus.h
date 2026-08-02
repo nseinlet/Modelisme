@@ -12,7 +12,14 @@ Original author : mikeshub: https://github.com/mikeshub/FUTABA_SBUS
 #define SBUS_SIGNAL_LOST        0x01
 #define SBUS_SIGNAL_FAILSAFE    0x03
 #define SBUS_NO_SIGNAL          0x07
-#define BAUDRATE 98000
+#define BAUDRATE 100000
+
+#define SBUS_FRAME_BEGIN 0x0f
+#define SBUS_FRAME_END 0x00
+#define SBUS_DEBUG
+
+#define ARBITRARY_DATA_SIZE 58
+#define MAX_DATA_SIZE 64
 
 #if defined(ARDUINO_AVR_NANO_EVERY)
   #define port Serial1
@@ -37,19 +44,22 @@ class FRSKY_SBUS
 {
 	public:
 		uint8_t sbusData[SBUS_DATA_SIZE+1];
+		uint8_t serialBuffer[MAX_DATA_SIZE+1];
 		int16_t channels[CHANNEL_SIZE];
 		int16_t servos[CHANNEL_SIZE];
-		uint8_t  failsafe_status;
-		int sbus_passthrough;
+		uint8_t failsafe_status;
 		int toChannels;
 		void begin(void);
 		int16_t Channel(uint8_t ch);
-		uint8_t DigiChannel(uint8_t ch);
-		void Servo(uint8_t ch, int16_t position);
-		void DigiServo(uint8_t ch, uint8_t position);
 		uint8_t Failsafe(void);
 		void UpdateChannels(void);
 		void FeedLine(void);
+		#if defined SBUS_DEBUG
+		void debug(Stream& serialPort);
+		uint8_t dbg1[MAX_DATA_SIZE+1];
+		uint8_t dbg2[MAX_DATA_SIZE+1];
+		uint8_t dbg3[MAX_DATA_SIZE+1];
+		#endif
 	private:
 		uint8_t byte_in_sbus;
 		uint8_t bit_in_sbus;
@@ -60,6 +70,12 @@ class FRSKY_SBUS
 		int bufferIndex;
 		uint8_t inData;
 		int feedState;
+		uint8_t prevData;
+		#if defined SBUS_DEBUG
+			unsigned long lastread;
+			unsigned long readErrors;
+		#endif
+		void readSerial(void);
 };
 
 #endif
