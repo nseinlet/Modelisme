@@ -47,8 +47,7 @@ class ReceiverCanal {
 class Receiver {
   public:
     ReceiverCanal channels[RECEIVER_CHANNELS];
-    int servoPins[MAX_CHANNELS];
-    int servoChannels[MAX_CHANNELS];
+    int servoChannels[MAX_LIB_CHANNELS];
 
     void setup();
     void setup(int);
@@ -59,7 +58,8 @@ class Receiver {
   private:
     FRSKY_SBUS sBus;
     int max_channels;
-    Servo servos[MAX_CHANNELS];
+    Servo servos[MAX_LIB_CHANNELS];
+    int servoPins[MAX_LIB_CHANNELS];
 };
 
 class LightManagerHistoryLine {

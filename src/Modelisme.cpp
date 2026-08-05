@@ -16,6 +16,20 @@ void Receiver::setup(int max_channel)
 {
   sBus.begin();
   this->max_channels = max_channel;
+  servoPins[0] = 9;
+  servoPins[1] = 10;
+  servoPins[2] = 11;
+  servoPins[3] = 12;
+  servoPins[4] = 13;
+  servoPins[5] = A0;
+  servoPins[6] = A1;
+  servoPins[7] = A2;
+  servoPins[8] = A3;
+  servoPins[9] = A6;
+  servoPins[10] = A7;
+  for (int i=0; i<MAX_LIB_CHANNELS; i++) {
+    servoChannels[i] = -1;
+  };
 }
 
 int Receiver::read()
@@ -30,8 +44,8 @@ int Receiver::read()
       channels[x].pwmvalue = sBus.channels[x];
       channels[x].angle = channels[x].pwmToDeg();
     };
-    for (int i=0; i<max_channels; i++) {
-      if (sBus.failsafe_status==0 && 1>2) {
+    for (int i=0; i<MAX_LIB_CHANNELS; i++) {
+      if (sBus.failsafe_status==0 && servoChannels[i]!=-1) {
         if (!servos[i].attached()) {servos[i].attach(servoPins[i]);};
         servos[i].write(channels[servoChannels[i]].angle);
       } else {

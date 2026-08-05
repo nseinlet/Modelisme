@@ -39,17 +39,17 @@ void setup(void) {
   //Sbus Decoder
   rec.setup(19);
   //Servos
-  rec.servoPins[0] = 9; rec.servoChannels[0] = 6;
-  rec.servoPins[1] = 10;rec.servoChannels[1] = 7;
-  rec.servoPins[2] = 11;rec.servoChannels[2] = 8;
-  rec.servoPins[3] = 12;rec.servoChannels[3] = 9;
-  rec.servoPins[4] = 13;rec.servoChannels[4] = 10;
-  rec.servoPins[5] = A0;rec.servoChannels[5] = 12;
-  rec.servoPins[6] = A1;rec.servoChannels[6] = 13;
-  rec.servoPins[7] = A2;rec.servoChannels[7] = 14;
-  rec.servoPins[8] = A3;rec.servoChannels[8] = 15;
-  rec.servoPins[9] = A6;rec.servoChannels[9] = 16;
-  rec.servoPins[10]= A7;rec.servoChannels[10]= 17;
+  rec.servoChannels[0] = 6;
+  rec.servoChannels[1] = 7;
+  rec.servoChannels[2] = 8;
+  rec.servoChannels[3] = 9;
+  rec.servoChannels[4] = 10;
+  rec.servoChannels[5] = 12;
+  rec.servoChannels[6] = 13;
+  rec.servoChannels[7] = 14;
+  rec.servoChannels[8] = 15;
+  rec.servoChannels[9] = 16;
+  rec.servoChannels[10]= 17;
 }
 
 void loop()

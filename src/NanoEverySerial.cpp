@@ -47,7 +47,7 @@ uint8_t NanoEverySerial::_read() {
     // Wait until data is completely received (blocking read)
     uint32_t startMs = millis();
     while (! _available()) {
-        if (millis() - startMs > 1000) { // 1 second timeout
+        if (millis() - startMs > 10) { // 1 second timeout
             _parityError = true;
             return 0x04; // or handle timeout as needed
         }
