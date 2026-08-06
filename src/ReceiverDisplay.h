@@ -107,10 +107,9 @@ class ReceiverDisplay {
 
   public:
     String modelName;
-    int max_channels;
     int speed_channel;
 
-    ReceiverDisplay(String, int);
+    ReceiverDisplay(String);
     void setup(Receiver*, LightManager*);
     void loop();
 

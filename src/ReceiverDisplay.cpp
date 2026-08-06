@@ -18,12 +18,11 @@
 #include <math.h>
 
 
-ReceiverDisplay::ReceiverDisplay(String modelName, int maxChannels) {
+ReceiverDisplay::ReceiverDisplay(String modelName) {
     displayTime = 0;
     refreshTime = 0;
     nbrdisp = 0;
     this->modelName = modelName;
-    this->max_channels = maxChannels;
     #if defined(SCREEN_1306_6432)
         u8g2 = new U8G2_SSD1306_64X32_1F_F_HW_I2C(U8G2_R0, U8X8_PIN_NONE);
     #else
@@ -88,7 +87,7 @@ void ReceiverDisplay::_drawServo(int pos, int angle) {
 
 void ReceiverDisplay::_drawScreenServos(int first_channel) {
     int offset = 0;
-    if (max_channels>first_channel){
+    if (MAX_LIB_CHANNELS>first_channel){
         u8g2->setFont(u8g2_font_4x6_tf);
         for (int i=first_channel;i<(first_channel+8);i++) {
           _drawServo(2+(i-first_channel)*8, rec->channels[i].angle);
