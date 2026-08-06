@@ -1,6 +1,6 @@
 #include "FrSky_SBus.h"
 #if defined(ARDUINO_AVR_NANO_EVERY)
-#include "NanoEverySerial.h"
+// #include "NanoEverySerial.h"
 #endif
 
 void FRSKY_SBUS::begin(){
@@ -10,11 +10,11 @@ void FRSKY_SBUS::begin(){
     #else
       0x0f,0x01,0x04,0x20,0x00,0xff,0x07,0x40,0x00,0x02,0x10,0x80,0x2c,0x64,0x21,0x0b,0x59,0x08,0x40,0x00,0x02,0x10,0x80,0x00,0x00};
     #endif
-    #if defined(ARDUINO_AVR_NANO_EVERY)
-     NanoEverySerial1.begin();
-    #else
+    // #if defined(ARDUINO_AVR_NANO_EVERY)
+    //  NanoEverySerial1.begin();
+    // #else
   	  port.begin(BAUDRATE, SERIAL_8E2);
-    #endif
+    // #endif
 
     #if defined(SBUS_DEBUG)
       readErrors = 0;
@@ -91,38 +91,38 @@ void FRSKY_SBUS::UpdateChannels(void) {
 
 }
 
-#if defined(ARDUINO_AVR_NANO_EVERY)
+// #if defined(ARDUINO_AVR_NANO_EVERY)
 
-void FRSKY_SBUS::readSerial(void){
-}
+// void FRSKY_SBUS::readSerial(void){
+// }
 
-void FRSKY_SBUS::FeedLine(void){
-  if (NanoEverySerial1.read()){
-    bufferIndex = HARDWARE_SERIAL_READ_SIZE;
+// void FRSKY_SBUS::FeedLine(void){
+//   if (NanoEverySerial1.read()){
+//     bufferIndex = HARDWARE_SERIAL_READ_SIZE;
 
-    #if defined SBUS_DEBUG
-      //memcpy(dbg1, NanoEverySerial1.buffer, bufferIndex);
-    #endif
+//     #if defined SBUS_DEBUG
+//       //memcpy(dbg1, NanoEverySerial1.buffer, bufferIndex);
+//     #endif
 
-    while(bufferIndex>SBUS_DATA_SIZE){
-      if (NanoEverySerial1.buffer[bufferIndex-SBUS_DATA_SIZE] == SBUS_FRAME_BEGIN && NanoEverySerial1.buffer[bufferIndex] == SBUS_FRAME_END){
-        memcpy(sbusData, NanoEverySerial1.buffer+bufferIndex-SBUS_DATA_SIZE, SBUS_DATA_SIZE+1);
+//     while(bufferIndex>SBUS_DATA_SIZE){
+//       if (NanoEverySerial1.buffer[bufferIndex-SBUS_DATA_SIZE] == SBUS_FRAME_BEGIN && NanoEverySerial1.buffer[bufferIndex] == SBUS_FRAME_END){
+//         memcpy(sbusData, NanoEverySerial1.buffer+bufferIndex-SBUS_DATA_SIZE, SBUS_DATA_SIZE+1);
 
-        #if defined SBUS_DEBUG
-          lastread = millis();
-        #endif
-        toChannels = 1;
-        return;
-      }
-      bufferIndex--;
-    }
-  #if defined SBUS_DEBUG
-  } else {
-      readErrors++;
-  #endif
-  };
-}
-#else
+//         #if defined SBUS_DEBUG
+//           lastread = millis();
+//         #endif
+//         toChannels = 1;
+//         return;
+//       }
+//       bufferIndex--;
+//     }
+//   #if defined SBUS_DEBUG
+//   } else {
+//       readErrors++;
+//   #endif
+//   };
+// }
+// #else
 void FRSKY_SBUS::readSerial(void){
   prevData = inData;
   inData = port.read();
@@ -153,8 +153,11 @@ void FRSKY_SBUS::FeedLine(void){
         }
         if (bufferIndex == SBUS_DATA_SIZE){
           feedState = 0;
-          // if (inBuffer[0]==SBUS_FRAME_BEGIN && inBuffer[SBUS_DATA_SIZE] == SBUS_FRAME_END){
-          if (inBuffer[SBUS_DATA_SIZE] == SBUS_FRAME_END){
+          // Perform some checks:
+          // Last byte must be 0
+          // Second last byte must be 0, 4, 8 or 12, aka the SBus status byte 
+          // There' s nothing more I can do to ensure it' s a SBus packet and not some crappy noise.
+          if (inBuffer[SBUS_DATA_SIZE] == SBUS_FRAME_END && (inBuffer[SBUS_DATA_SIZE-1]==0 || inBuffer[SBUS_DATA_SIZE-1]==4 || inBuffer[SBUS_DATA_SIZE-1]==8 || inBuffer[SBUS_DATA_SIZE-1]==12)){
             memcpy(sbusData,inBuffer,SBUS_DATA_SIZE+1);
             #if defined SBUS_DEBUG
             lastread = millis();
@@ -172,7 +175,7 @@ void FRSKY_SBUS::FeedLine(void){
     }
   }
 }
-#endif
+// #endif
 
 #if defined SBUS_DEBUG
 void FRSKY_SBUS::debug(Stream& serialPort){

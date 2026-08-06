@@ -22,7 +22,7 @@
 #define AngleMax 175
 
 #define MAX_LM_HISTORY 5
-#define MAX_CHANNELS 12
+#define MAX_LIB_CHANNELS 12
 
 #include "Arduino.h"
 #include <FrSky_SBus.h>

@@ -47,7 +47,7 @@ int Receiver::read()
     for (int i=0; i<MAX_LIB_CHANNELS; i++) {
       if (sBus.failsafe_status==0 && servoChannels[i]!=-1) {
         if (!servos[i].attached()) {servos[i].attach(servoPins[i]);};
-        servos[i].write(channels[servoChannels[i]].angle);
+        servos[i].write(channels[servoChannels[i]-1].angle);
       } else {
         if (servos[i].attached()) {servos[i].detach();};
       }
